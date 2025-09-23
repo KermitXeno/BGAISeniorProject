@@ -1,5 +1,5 @@
 # Below write your name and what part you would like to do for the project (back end or front end)
-
+Gary (model training(backend))
 
 # Front end stack
 
