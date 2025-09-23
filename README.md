@@ -1,13 +1,13 @@
-#Below write your name and what part you would like to do for the project (back end or front end)
+# Below write your name and what part you would like to do for the project (back end or front end)
 
 
-#Front end stack
+# Front end stack
 
 
-#Front end goals
+# Front end goals
 
 
-#Back end stack
+# Back end stack
 
 Pytorch
 Flask (for the model api)
@@ -20,7 +20,7 @@ One that seemed interesting: (no scans, but lifestyle choices are included)
 Mendeley Data: microbiota analysis of elderly people with Alzheimer's disease
 
 
-#Back end goals
+# Back end goals
 API - gets the image and converts the info to a storable state
 Database - training data will be stored here (mostly will be a CSV format)
 
@@ -29,11 +29,11 @@ Accept MRI images from the front end which is converted to a feature space and f
 
 Store patient information which can be used in perhaps a separate model to determine alzheimer risks based on lifestyle factors
 
-#Basic outline of project
+# Basic outline of project
 
 We are making medical software designed to assess Alzheimer risks based on MRI scans and lifestyle factors. We are going to use databases, machine learning, and web development tools to create a web based application that can be used by medical professionals. 
 
-#Additional Notes/Thoughts
+# Additional Notes/Thoughts
 
 Feel free to add what you think will contribute to our end product or lead to a better outcome for the group. Also I left the web development tools part of the project kind of vague as i dont know barely anything about front end development. Anyone that knows what stack we might need for the front end could fill that in. Also ive used flask before for making python APIs but if there are any other API frameworks for any additional languages we want to use, add them too. Basically everything written here right now is a suggestion and can be changed. I'm also hoping once we start coding we can use this as the readme for the github.
 ~Gary 
