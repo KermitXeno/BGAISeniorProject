@@ -32,7 +32,7 @@ train_data = keras.utils.image_dataset_from_directory(
     labels='inferred',
     label_mode='int',
     batch_size=32,
-    image_size=(224, 224),
+    image_size=(128, 128),
     color_mode='rgb',
     shuffle=True,
     verbose=True
@@ -43,7 +43,7 @@ test_data = keras.utils.image_dataset_from_directory(
     labels='inferred',
     label_mode='int',
     batch_size=32,
-    image_size=(224, 224),
+    image_size=(128, 128),
     color_mode='rgb',
     shuffle=True,
     verbose=True
@@ -61,7 +61,7 @@ test = test_data.map(process)
 
 #model creation
 model = tf.keras.Sequential([
-    layers.Conv2D(256, (11, 11), activation='relu', input_shape=(224, 224, 3)),
+    layers.Conv2D(256, (11, 11), activation='relu', input_shape=(128, 128, 3)),
     layers.MaxPooling2D((3, 3)),
     layers.BatchNormalization(),
     layers.Conv2D(128, (5, 5), activation='relu'),
