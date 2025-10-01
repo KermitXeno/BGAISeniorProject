@@ -61,20 +61,28 @@ test = test_data.map(process)
 
 #model creation
 model = tf.keras.Sequential([
-    layers.Conv2D(256, (11, 11), activation='relu', input_shape=(128, 128, 3)),
-    layers.MaxPooling2D((3, 3)),
+    layers.Conv2D(64, (3, 3), activation='relu', input_shape=(128, 128, 3)),
+    layers.Conv2D(64, (3, 3), activation='relu'),
     layers.BatchNormalization(),
-    layers.Conv2D(128, (5, 5), activation='relu'),
-    layers.MaxPooling2D((3, 3)),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.MaxPooling2D((3, 3)),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(128, (3, 3), activation='relu'),
+    layers.Conv2D(128, (3, 3), activation='relu'),
     layers.BatchNormalization(),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(256, (3, 3), activation='relu'),
+    layers.Conv2D(256, (3, 3), activation='relu'),
+    layers.BatchNormalization(),
+    layers.MaxPooling2D((2, 2)),
+    layers.Conv2D(512, (3, 3), activation='relu'),
+    layers.Conv2D(512, (3, 3), activation='relu'),
+    layers.BatchNormalization(),
+    layers.MaxPooling2D((2, 2)),
     layers.Flatten(),
     layers.Dense(2048, activation='relu'),
-    layers.Dense(2048, activation='relu'),
-    layers.Dense(4),
+    layers.BatchNormalization(),
+    layers.Dense(1024, activation='relu'),
+    layers.BatchNormalization(),
+    layers.Dense(4)
 ])
 #early stopping
 ES = EarlyStopping(
@@ -87,9 +95,10 @@ ES = EarlyStopping(
     start_from_epoch=0,
 )
 
-model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.05)
+model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
 #start training
-history = model.fit(train, batch_size= 32, epochs=5,validation_data=test, callbacks=[ES])
+history = model.fit(train, batch_size = 32, epochs = 5,validation_data = test, callbacks = [ES])
 
 e=pd.DataFrame(model.history)
 e[['accuracy','val_accuracy']].plot()
