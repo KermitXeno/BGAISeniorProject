@@ -24,7 +24,7 @@ from kaggle.api.kaggle_api_extended import KaggleApi
 api = KaggleApi()
 api.authenticate()
 
-#path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
+path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
 print("Done downloading dataset")
 #train data loading
 train_data = keras.utils.image_dataset_from_directory(
@@ -78,10 +78,13 @@ model = tf.keras.Sequential([
     layers.BatchNormalization(),
     layers.MaxPooling2D((2, 2)),
     layers.Flatten(),
+    layers.Dropout(0.5),
     layers.Dense(2048, activation='relu'),
     layers.BatchNormalization(),
+    layers.Dropout(0.4),
     layers.Dense(1024, activation='relu'),
     layers.BatchNormalization(),
+    layers.Dropout(0.3),
     layers.Dense(4)
 ])
 #early stopping
@@ -98,8 +101,4 @@ ES = EarlyStopping(
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.05)
 model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
 #start training
-history = model.fit(train, batch_size = 32, epochs = 5,validation_data = test, callbacks = [ES])
-
-e=pd.DataFrame(model.history)
-e[['accuracy','val_accuracy']].plot()
-e[['loss','val_loss']].plot()
+fitted = model.fit(train, batch_size = 32, epochs = 5,validation_data = test, callbacks = [ES])
