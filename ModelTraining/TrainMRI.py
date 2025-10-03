@@ -6,10 +6,13 @@ Created on Thu Sep 25 16:05:50 2025
 """
 #ML training
 import tensorflow as tf
-from tensorflow.keras import layers, models
-from tensorflow.keras.applications.efficientnet import preprocess_input
-from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow import keras
+from tensorflow.keras import models
+from tensorflow.keras.layers import Dense, Conv2D, BatchNormalization, Dropout, Flatten, MaxPooling2D
+from tensorflow.keras.applications.efficientnet import preprocess_input
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.applications import ResNet50V2
+from tensorflow.keras import regularizers
 #math utilities
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,14 +20,15 @@ from collections import Counter
 #data frame utils
 import pandas as pd
 #image processing
-import cv2
-#kaggle
-import kaggle
-from kaggle.api.kaggle_api_extended import KaggleApi
-api = KaggleApi()
-api.authenticate()
+#import cv2
 
-path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
+#kaggle
+#import kaggle
+#from kaggle.api.kaggle_api_extended import KaggleApi
+#api = KaggleApi()
+#api.authenticate()
+#path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
+
 print("Done downloading dataset")
 #train data loading
 train_data = keras.utils.image_dataset_from_directory(
@@ -48,57 +52,60 @@ test_data = keras.utils.image_dataset_from_directory(
     shuffle=True,
     verbose=True
 )
+#label processing
+classes = Counter()
+for _, labels in train_data: 
+    classes.update(labels.numpy())
+print("Class Counts:", dict(classes))
+
 #image preprocessing
 def process(image, label):
     image = preprocess_input(image)
     return image, label
-
 train = train_data.map(process)
 test = test_data.map(process)
 
-#print("Class Names:", train_dataset.class_names)
-#print("Class Names:", test_dataset.class_names)
+#get resnet50v2
+EXTmodel = ResNet50V2(
+    include_top=False,
+    weights="imagenet",
+    input_shape=(128, 128, 3),
+    classes=4 
+)
+EXTmodel.trainable = True
+set_trainable = False
 
 #model creation
-model = tf.keras.Sequential([
-    layers.Conv2D(64, (3, 3), activation='relu', input_shape=(128, 128, 3)),
-    layers.Conv2D(64, (3, 3), activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(128, (3, 3), activation='relu'),
-    layers.Conv2D(128, (3, 3), activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(256, (3, 3), activation='relu'),
-    layers.Conv2D(256, (3, 3), activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D((2, 2)),
-    layers.Conv2D(512, (3, 3), activation='relu'),
-    layers.Conv2D(512, (3, 3), activation='relu'),
-    layers.BatchNormalization(),
-    layers.MaxPooling2D((2, 2)),
-    layers.Flatten(),
-    layers.Dropout(0.5),
-    layers.Dense(2048, activation='relu'),
-    layers.BatchNormalization(),
-    layers.Dropout(0.4),
-    layers.Dense(1024, activation='relu'),
-    layers.BatchNormalization(),
-    layers.Dropout(0.3),
-    layers.Dense(4)
-])
+model = tf.keras.Sequential()
+model.add(EXTmodel)
+model.add(Flatten())
+model.add(Dense(64, activation='relu',  kernel_regularizer=regularizers.l1(0.001)))
+model.add(BatchNormalization())
+model.add(Dropout(0.1))
+model.add(Dense(32, activation='relu',  kernel_regularizer=regularizers.l2(0.001)))
+model.add(BatchNormalization())
+model.add(Dropout(0.2))
+model.add(Dense(4, activation='softmax',))
+
 #early stopping
 ES = EarlyStopping(
     monitor="val_loss",
     min_delta=0.01,
-    patience=11,
+    patience=10,
     verbose=1,
     mode="auto",
     restore_best_weights=True,
     start_from_epoch=0,
 )
+#reduce
+RE = ReduceLROnPlateau(
+    monitor='val_loss',
+    factor=0.3,
+    patience=4,
+    min_lr=1e-6
+)
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.05)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.000175)
 model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
 #start training
-fitted = model.fit(train, batch_size = 32, epochs = 5,validation_data = test, callbacks = [ES])
+fitted = model.fit(train, batch_size = 32, epochs = 20,validation_data = test, callbacks = [RE, ES])
