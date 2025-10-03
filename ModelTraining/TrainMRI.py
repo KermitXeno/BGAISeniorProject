@@ -16,18 +16,16 @@ from tensorflow.keras import regularizers
 #math utilities
 import matplotlib.pyplot as plt
 import numpy as np
-from collections import Counter
 #data frame utils
 import pandas as pd
 #image processing
 #import cv2
-
 #kaggle
-#import kaggle
-#from kaggle.api.kaggle_api_extended import KaggleApi
-#api = KaggleApi()
-#api.authenticate()
-#path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
+import kaggle
+from kaggle.api.kaggle_api_extended import KaggleApi
+api = KaggleApi()
+api.authenticate()
+path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='ModelTraining/data', unzip=TRUE)
 
 print("Done downloading dataset")
 #train data loading
@@ -52,11 +50,6 @@ test_data = keras.utils.image_dataset_from_directory(
     shuffle=True,
     verbose=True
 )
-#label processing
-classes = Counter()
-for _, labels in train_data: 
-    classes.update(labels.numpy())
-print("Class Counts:", dict(classes))
 
 #image preprocessing
 def process(image, label):
@@ -79,12 +72,12 @@ set_trainable = False
 model = tf.keras.Sequential()
 model.add(EXTmodel)
 model.add(Flatten())
-model.add(Dense(64, activation='relu',  kernel_regularizer=regularizers.l1(0.001)))
+model.add(Dense(128, activation='relu',  kernel_regularizer=regularizers.l2(0.0005)))
 model.add(BatchNormalization())
-model.add(Dropout(0.1))
-model.add(Dense(32, activation='relu',  kernel_regularizer=regularizers.l2(0.001)))
+model.add(Dropout(0.3))
+model.add(Dense(64, activation='relu',  kernel_regularizer=regularizers.l2(0.0005)))
 model.add(BatchNormalization())
-model.add(Dropout(0.2))
+model.add(Dropout(0.3))
 model.add(Dense(4, activation='softmax',))
 
 #early stopping
@@ -105,7 +98,9 @@ RE = ReduceLROnPlateau(
     min_lr=1e-6
 )
 
-optimizer = tf.keras.optimizers.SGD(learning_rate=0.000175)
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.00015)
 model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
 #start training
-fitted = model.fit(train, batch_size = 32, epochs = 20,validation_data = test, callbacks = [RE, ES])
+fitted = model.fit(train, batch_size = 32, epochs = 32,validation_data = test, callbacks = [RE, ES])
+
+model.save('./ModelTraining/weights/AMRIGENETV1.keras')
