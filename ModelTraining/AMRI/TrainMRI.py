@@ -8,7 +8,7 @@ Created on Thu Sep 25 16:05:50 2025
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import models
-from tensorflow.keras.layers import Dense, Conv2D, BatchNormalization, Dropout, Flatten, MaxPooling2D
+from tensorflow.keras.layers import Dense, Conv2D, BatchNormalization, Dropout, Flatten
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.applications import ResNet50V2
@@ -21,16 +21,16 @@ import pandas as pd
 #image processing
 #import cv2
 #kaggle
-import kaggle
-from kaggle.api.kaggle_api_extended import KaggleApi
-api = KaggleApi()
-api.authenticate()
-path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='AMRI/data', unzip=TRUE)
+#import kaggle
+#from kaggle.api.kaggle_api_extended import KaggleApi
+#api = KaggleApi()
+#api.authenticate()
+#path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='AMRI/data', unzip=TRUE)
 
 print("Done downloading dataset")
 #train data loading
 train_data = keras.utils.image_dataset_from_directory(
-    directory='./AMRI/data/Combined Dataset/train',
+    directory='./ModelTraining/AMRI/data/Combined Dataset/train',
     labels='inferred',
     label_mode='int',
     batch_size=32,
@@ -41,7 +41,7 @@ train_data = keras.utils.image_dataset_from_directory(
 )
 #test data loading
 test_data = keras.utils.image_dataset_from_directory(
-    directory='./AMRI/data/Combined Dataset/test',
+    directory='./ModelTraining/AMRI/data/Combined Dataset/test',
     labels='inferred',
     label_mode='int',
     batch_size=32,
@@ -72,12 +72,18 @@ set_trainable = False
 model = tf.keras.Sequential()
 model.add(EXTmodel)
 model.add(Flatten())
-model.add(Dense(128, activation='relu',  kernel_regularizer=regularizers.l2(0.0005)))
+model.add(Dense(32, activation='silu',  kernel_regularizer=regularizers.l2(0.0005)))
 model.add(BatchNormalization())
-model.add(Dropout(0.3))
-model.add(Dense(64, activation='relu',  kernel_regularizer=regularizers.l2(0.0005)))
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='silu',  kernel_regularizer=regularizers.l2(0.0005)))
 model.add(BatchNormalization())
-model.add(Dropout(0.3))
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='silu',  kernel_regularizer=regularizers.l2(0.0005)))
+model.add(BatchNormalization())
+model.add(Dropout(0.2))
+model.add(Dense(32, activation='silu',  kernel_regularizer=regularizers.l2(0.0005)))
+model.add(BatchNormalization())
+model.add(Dropout(0.2))
 model.add(Dense(4, activation='softmax',))
 
 #early stopping
