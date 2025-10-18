@@ -1,0 +1,19 @@
+MNEMOS DATABASE DOCUMENTATION
+
+SCHEMA: Mnemos
+TABLES: cross_sectional_oasis
+
+cross_sectional_oasis features:
+ID text  
+Sex boolean             (F = 1, M = 0)
+Dominant_hand boolean  (Right=1, Left = 0)
+Age integer
+Education_type integer (1: less than high school grad, 2: highschool grad, 3: some college, 4: college grad, 5: beyond college)
+*SES integer (socioeconomic status) (1: highest SES status, 5: lowest SES status)
+MMSE integer (Mini-Mental State Examination)
+CDR float (Clinial Dementia Rating) (0: nondemented, 0.5: very mild dementia, 1: mild dementia, 2: moderate dementia)
+ETIV integer integer (Estimated total intracranial volume mm cubed)
+NWBV integer float (Normalized whole brain volume)
+ASF float (Atlas scaling factor)
+
+*SES is assumed to be using the Hollingshead index as the research papers I found regarding this OASIS dataset referred to it as such and I can find no other sources that contradict this.
