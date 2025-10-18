@@ -20,9 +20,15 @@ conn = psycopg2.connect(f"host={HOST} port={PORT} dbname={DBNAME} user={USER} pa
 try:
     conn.autocommit = True #
     cur = conn.cursor()
-    cur.execute("SELECT * FROM pg_database") 
-    print(cur.fetchall()) #dont worry about the db info it outputs, so long as it connects and prints, youre good!
-
+    cur.execute("""select
+    t.table_name AS table_name,
+    column_name,
+    data_type
+    from information_schema.tables t
+    INNER JOIN information_schema.columns c on c.table_schema = c.table_schema AND t.table_name = c.table_name
+    WHERE c.table_schema= 'mnemos'""") 
+    df_db = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+    print(df_db)
 except Exception as e:
     print(e)
 
