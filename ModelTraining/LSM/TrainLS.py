@@ -28,12 +28,12 @@ print(labels.head())
 
 model = keras.Sequential([
     keras.layers.InputLayer(input_shape=(33,)),
-    keras.layers.Dense(1024, activation='relu6'),
-    keras.layers.Dense(1024, activation='relu6'),
-    keras.layers.Dense(1024, activation='relu6'),
-    keras.layers.Dense(1024, activation='relu6'),
-    keras.layers.Dense(1024, activation='relu6'),
-    keras.layers.Dense(1024, activation='relu6'),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(1024, activation='relu'),
     keras.layers.Dense(2, activation='softmax')
 ])
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.0015)
