@@ -50,11 +50,3 @@ def predictMRI_api():
     return jsonify({'error': 'File processing error'}), 500
 
 @app.route('/predictLSM', methods=['POST'])
-def predictLSM_api():
-    data = request.json.get('data')
-    if not data or len(data) != 33:
-        return jsonify({'error': 'Invalid input data'}), 400
-    result = predictLSM(np.array(data))
-    classes = ['Alzheimer\'s Disease', 'No Alzheimer\'s Disease']
-    predicted_class = classes[np.argmax(result)]
-    return jsonify({'prediction': predicted_class})
