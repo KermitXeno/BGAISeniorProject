@@ -2,7 +2,7 @@
 @author: elamr
 """
 #LSM model training utils
-from keras.src.optimizers import optimizer
+import os
 import tensorflow as tf
 import keras
 import pandas as pd

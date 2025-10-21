@@ -5,8 +5,6 @@
 import os
 import psycopg2
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from dotenv import find_dotenv, load_dotenv
 import kaggle
 from kaggle.api.kaggle_api_extended import KaggleApi
@@ -48,8 +46,10 @@ finally:
 df.dropna(how='any', subset=['CDR'], inplace=True)
 df.drop('Delay', axis=1, inplace=True)
 df.drop('ID', axis=1, inplace=True)
+df.drop('Identification', axis=1, inplace=True)
+df.drop('Dominant_Hand', axis=1, inplace=True)
 df['SES'] = df['SES'].fillna(2.0)
-df = df.replace({'Sex' : {'F':1, 'M':0}, 'Dominant_Hand' : {'L': 1, 'R': 0}})
+df = df.replace({'Sex' : {'F':1, 'M':0}})
 df = df.convert_dtypes()
 
 df.head()
