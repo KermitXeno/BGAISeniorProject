@@ -4,6 +4,10 @@
 """
 import os
 import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import models
+from tensorflow.keras.layers import Dense, Dropout
 # kaggle
 #from kaggle.api.kaggle_api_extended import KaggleApi
 #api = KaggleApi()
@@ -15,26 +19,38 @@ df = pd.read_csv("./ModelTraining/BIOFM/data/oasis_longitudinal.csv", header=0)
 #print head of df
 print(df.head())
 
-df.drop('Subject ID')
-df.drop ('MR Delay')
-df.drop ('Hand')
-df.drop ('MRI ID')
-df.drop ('Group')
-df.drop ('Visit')
-df.replace({'M/F' : {'F':1, 'M':0}})
-df.dropna()
+df.drop('Subject ID', axis=1, inplace=True)
+df.drop('MR Delay', axis=1, inplace=True)
+df.drop('Hand', axis=1, inplace=True)
+df.drop('MRI ID', axis=1, inplace=True)
+df.drop('Group', axis=1, inplace=True)
+df.drop('Visit', axis=1, inplace=True)
+df['M/F'] = df['M/F'].map({'F':0, 'M':1})
+df['CDR'] = df['CDR'].map({0.0:0, 0.5:1, 1.0:2, 2.0:3})
+df = df.dropna()
 df.convert_dtypes()
 
-def change_cdr(cdr):
-    if cdr == 0.5:
-        return 1
-    elif cdr == 1:
-        return 2
-    elif cdr == 2:
-        return 3
-    else:
-        return 0
-
-df['CDR'] = df['CDR'].map(change_cdr)
-
+print(df.head())
 df.to_csv('./ModelTraining/BIOFM/data/clean_oasis.csv', index=False,  header=False)
+
+labels = df['CDR']
+df.drop('CDR', axis=1, inplace=True)
+print(labels.head())
+
+model = tf.keras.Sequential()
+model.add(Dense(64, activation='relu', input_shape=(df.shape[1],)))
+model.add(Dropout(0.05))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.05))
+model.add(Dense(32, activation='relu'))
+model.add(Dropout(0.05))
+model.add(Dense(32, activation='relu'))
+model.add(Dropout(0.05))
+model.add(Dense(4, activation='softmax'))
+
+optimizer = tf.keras.optimizers.SGD(learning_rate=0.0008)
+model.compile(optimizer=optimizer, loss='poisson', metrics=['accuracy'])
+model.fit(df, labels, epochs=64, batch_size=32, validation_split=0.2)
+
+
+
