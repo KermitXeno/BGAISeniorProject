@@ -1,3 +1,5 @@
+BEFORE YOU START WORKING ON THE MODEL RUN THE TRAIN BIO AND TRAIN MRI SCRIPTS TO ENSURE THE MODEL KERAS FILES EXIST
+
 The first page of the frontend should be a dashboard which lets the user select between the three models
 the bio model, the mri model and the EEG model, upon selecting one the user will be taken to a page where 
 they have a form to input information/files to be passed to the model for predictions, once the model has made predictions 
