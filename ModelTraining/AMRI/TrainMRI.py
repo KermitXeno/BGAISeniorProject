@@ -18,11 +18,11 @@ import os
 #data frame utils
 import pandas as pd
 #kaggle
-import kaggle
-from kaggle.api.kaggle_api_extended import KaggleApi
-api = KaggleApi()
-api.authenticate()
-path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='./ModelTraining/AMRI/data/', unzip=True)
+#import kaggle
+#from kaggle.api.kaggle_api_extended import KaggleApi
+#api = KaggleApi()
+#api.authenticate()
+#path = api.dataset_download_files("lukechugh/best-alzheimer-mri-dataset-99-accuracy", path='./ModelTraining/AMRI/data/', unzip=True)
 print("Done downloading dataset")
 
 train_data = keras.utils.image_dataset_from_directory(

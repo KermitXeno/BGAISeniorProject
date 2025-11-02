@@ -13,21 +13,30 @@ MRImodel = keras.saving.load_model("./ModelTraining/AMRI/weights/AMRIGENETV1.ker
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.00015)
 MRImodel.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy','mse'])
 
-#here will be the declaration of the bio model
+BIOModel = keras.saving.load_model("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+BIOModel.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
 
 #test image loading
-#picturePath = "./ModelTraining/AMRI/demoIMG/MildImpairment (1).jpg"
-#imgmild= image.load_img(picturePath, target_size = (128, 128)) 
+picturePath = "./ModelTraining/AMRI/demoIMG/MildImpairment (1).jpg"
+imgmild= image.load_img(picturePath, target_size = (128, 128)) 
+
+#test data for the bio model array with values 0,75,12,2.0,18.0,1479,0.657,1.187
+testdata = [0, 75, 12, 2.0, 18.0 ,1479, 0.657, 1.187]
 
 def predictMRI(img):
     img = image.img_to_array(img)
     img = np.expand_dims(img, axis = 0)
     result = MRImodel.predict(img)   
     return result
-#testing
-#print(predict(imgmild))
+print(predictMRI(imgmild))
 
-#here will be the prediction call to the bio model
+def predictBIO(data):
+    data = np.array(data)
+    data = np.expand_dims(data, axis = 0)
+    result = BIOModel.predict(data)
+    return result
+print(predictBIO(testdata))
 
 app = Flask(__name__)
 @app.route('/predictMRI', methods=['POST'])
@@ -45,5 +54,12 @@ def predictMRI_api():
         return jsonify({'prediction': predicted_class})
     return jsonify({'error': 'File processing error'}), 500
 
-#here will be the route for the bio model
-
+@app.route('/predictBIO', methods=['POST'])
+def predictBIO_api():
+    data = request.json.get('data')
+    if not data or len(data) != 8:
+        return jsonify({'error': 'Invalid input data. Expected 8 features.'}), 400
+    result = predictBIO(data)
+    classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
+    predicted_class = classes[np.argmax(result)]
+    return jsonify({'prediction': predicted_class})
