@@ -1,0 +1,41 @@
+The first page of the frontend should be a dashboard which lets the user select between the three models
+the bio model, the mri model and the EEG model, upon selecting one the user will be taken to a page where 
+they have a form to input information/files to be passed to the model for predictions, once the model has made predictions 
+the results will be displayed to the user
+
+THE BIO MODEL
+
+input field consists of 8 values
+M/F  Age  EDUC  SES  MMSE  eTIV  nWBV   ASF
+M/f = 1 or 0
+age = int
+educ = int
+SES = float
+MMSE = Float
+eTIV = int
+nWBV = float
+ASF = float
+
+the page for this model should have 8 fields for inputing these values which will be sent to the api
+which should returns a list of four float values from the model
+
+please consult the CrossSectionalCleaning.ipynb file in the db connection directory for more information on
+avove stated inputs.
+
+when the model returns it will give a list of 4 floats, with the first being the chance of no dementia
+with the last being the highest level of dementia the model is trained on
+
+i will leave it up to you three on how you will comunicate this information to the user and display it in a
+more user friendly manner (graphs, charts, etc)
+
+THE MRI MODEL
+
+this page will prompt the user to upload an image to the webpage which will be sent to the model via the api and be
+given back a prediction in the form of a list of 4 floats similar to the bio model, once again how this information 
+is communicated to the user is up to you guys, the model simply will take input and give output black box style.
+
+THE EEG MODEL
+
+im still working on that one so be patient ill update this soon for now have the page in the frontend but say its
+under construction
+
