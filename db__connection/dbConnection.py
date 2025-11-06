@@ -4,6 +4,7 @@
 
 import os
 import psycopg2
+import pandas as pd
 from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(usecwd=True))
@@ -17,20 +18,33 @@ PASSWORD = os.getenv("PASSWORD")
     
 conn = psycopg2.connect(f"host={HOST} port={PORT} dbname={DBNAME} user={USER} password={PASSWORD} gssencmode=disable") 
 
-try:
-    conn.autocommit = True #
-    cur = conn.cursor()
-    cur.execute("""select
-    t.table_name AS table_name,
-    column_name,
-    data_type
-    from information_schema.tables t
-    INNER JOIN information_schema.columns c on c.table_schema = c.table_schema AND t.table_name = c.table_name
-    WHERE c.table_schema= 'mnemos'""") 
-    df_db = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
-    print(df_db)
-except Exception as e:
-    print(e)
+def testConnection(conn):
+    try:
+        cur = conn.cursor()
+        # cur.execute("""select
+        # t.table_name AS table_name,
+        # column_name,
+        # data_type
+        # from information_schema.tables t
+        # INNER JOIN information_schema.columns c on c.table_schema = c.table_schema AND t.table_name = c.table_name
+        # WHERE c.table_schema= 'mnemos'""")
+        # df_db = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+        print("SUCCESSFUL CONNECTION TO MNEMOS:")
 
-finally:
-    cur.close()
+    except Exception as e:
+        print(e)
+
+    finally:
+        cur.close()
+
+def getTableData(conn, table_name):
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""select * from {table_name}""")
+        df = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+        return df
+    except Exception as e:
+        print(e)
+
+    finally:
+        cur.close()
