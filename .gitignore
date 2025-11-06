@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.env
+/.vs
+/ModelTraining/BIOFM/weights
+/ModelTraining/BIOFM/weights/BIOFMGENETV1.keras
+/ModelTraining/AMRI/weights/AMRIGENETV1.keras
