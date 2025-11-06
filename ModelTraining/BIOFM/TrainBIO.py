@@ -20,6 +20,7 @@ import numpy as np
 print("Done downloading dataset")
 
 df = pd.read_csv("./ModelTraining/BIOFM/data/oasis_longitudinal.csv", header=0)
+# df = pd.read_csv("./BIOFM/data/oasis_longitudinal.csv", header=0) #Use this if there are pathing issues
 
 print(df.head())
 print(df.dtypes)
@@ -50,6 +51,7 @@ df.convert_dtypes()
 
 print(df.head())
 df.to_csv('./ModelTraining/BIOFM/data/clean_oasis.csv', index=False,  header=False)
+# df.to_csv('./BIOFM/data/clean_oasis.csv', index=False,  header=False) #Use this if there are pathing issues
 
 labels = to_categorical(df['CDR'], num_classes=4)
 df.drop('CDR', axis=1, inplace=True)
@@ -76,6 +78,6 @@ model.compile(optimizer=optimizer, loss=loser, metrics=['accuracy'])
 model.fit(x=df, y=labels, epochs=64, batch_size=32)
 
 model.save("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
-
+# model.save("./BIOFM/weights/BIOFMGENETV1.keras") #Use this if there are pathing issues
 
 
