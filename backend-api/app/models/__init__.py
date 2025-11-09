@@ -1,5 +1,7 @@
+import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import JSONB  # works great on Postgres
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 import uuid
@@ -54,11 +56,15 @@ class MRIStudy(MRIStudyBase, TimestampMixin, table=True):
     file_path: str
     file_size: Optional[int] = None
     processing_status: str = Field(default="pending")
-    feature_vector: Optional[Dict[str, Any]] = Field(default=None, sa_column_kwargs={"type_": "JSON"})
+
+    # JSON fields (dict type + real JSONB column)
+    feature_vector: Optional[dict] = Field(default=None, sa_column=sa.Column(JSONB))
+    risk_explanation: Optional[dict] = Field(default=None, sa_column=sa.Column(JSONB))
+
     risk_score_mri: Optional[float] = None
-    risk_explanation: Optional[Dict[str, Any]] = Field(default=None, sa_column_kwargs={"type_": "JSON"})
-    patient: Patient = Relationship(back_populates="mri_studies")
+    patient: "Patient" = Relationship(back_populates="mri_studies")
     assessments: List["Assessment"] = Relationship(back_populates="mri_study")
+
 class MRIStudyCreate(MRIStudyBase):
     patient_id: int
 class MRIStudyRead(MRIStudyBase):
@@ -83,9 +89,13 @@ class LifestyleAssessment(LifestyleAssessmentBase, TimestampMixin, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     patient_id: int = Field(foreign_key="patient.id")
     risk_score_lifestyle: Optional[float] = None
-    risk_factors: Optional[Dict[str, Any]] = Field(default=None, sa_column_kwargs={"type_": "JSON"})
-    patient: Patient = Relationship(back_populates="lifestyle_assessments")
+
+    # JSON field
+    risk_factors: Optional[dict] = Field(default=None, sa_column=sa.Column(JSONB))
+
+    patient: "Patient" = Relationship(back_populates="lifestyle_assessments")
     assessments: List["Assessment"] = Relationship(back_populates="lifestyle_assessment")
+
 class LifestyleAssessmentCreate(LifestyleAssessmentBase):
     patient_id: int
 class LifestyleAssessmentRead(LifestyleAssessmentBase):
@@ -96,6 +106,7 @@ class LifestyleAssessmentRead(LifestyleAssessmentBase):
 class AssessmentBase(SQLModel):
     assessment_name: str
     notes: Optional[str] = None
+
 class Assessment(AssessmentBase, TimestampMixin, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     patient_id: int = Field(foreign_key="patient.id")
