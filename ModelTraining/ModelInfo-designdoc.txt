@@ -6,6 +6,9 @@ they have a form to input information/files to be passed to the model for predic
 the results will be displayed to the user
 
 THE BIO MODEL
+output tuples ex: [0.22772369 -0.7057197  -2.133551   -4.6240296]
+[CDR 0 (no dementia) | CDR 0.5 (Very Mild Dementia) | CDR 1 (Mild Dementia) | CDR 2 (Moderate Dementia)]
+interpretation: [22% confidence in no dementia]
 
 input field consists of 8 values
 M/F  Age  EDUC  SES  MMSE  eTIV  nWBV   ASF
@@ -31,6 +34,9 @@ i will leave it up to you three on how you will comunicate this information to t
 more user friendly manner (graphs, charts, etc)
 
 THE MRI MODEL
+output tuple ex: [9.9955410e-01 3.2656710e-04 4.1768603e-06 1.1513390e-04]
+[Mild Impairment | Moderate Impairment | No impairment | Very Mild Impairment]
+interpretation: [99% confidence in mild impairment]
 
 this page will prompt the user to upload an image to the webpage which will be sent to the model via the api and be
 given back a prediction in the form of a list of 4 floats similar to the bio model, once again how this information 
