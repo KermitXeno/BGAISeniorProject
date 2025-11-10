@@ -4,6 +4,7 @@
 """
 
 from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 import tensorflow as tf
 import keras
 from keras.preprocessing import image
@@ -15,7 +16,7 @@ MRImodel.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=[
 
 BIOModel = keras.saving.load_model("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
 optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
-BIOModel.compile(optimizer=optimizer, loss='binary_crossentropy', metrics=['accuracy'])
+BIOModel.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 #test image loading
 picturePath = "./ModelTraining/AMRI/demoIMG/MildImpairment (1).jpg"
@@ -41,6 +42,7 @@ print(predictBIO(testdata))
 print(BIOModel.summary())
 
 app = Flask(__name__)
+CORS(app)
 @app.route('/predictMRI', methods=['POST'])
 def predictMRI_api():
     if 'file' not in request.files:
@@ -65,3 +67,6 @@ def predictBIO_api():
     classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
     predicted_class = classes[np.argmax(result)]
     return jsonify({'prediction': predicted_class})
+
+#if __name__ == '__main__':
+#    app.run(debug=True)
