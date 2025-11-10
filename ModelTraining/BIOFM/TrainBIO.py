@@ -58,20 +58,21 @@ labels = to_categorical(df['CDR'], num_classes=4)
 df.drop('CDR', axis=1, inplace=True)
 
 model = tf.keras.Sequential()
-model.add(Dense(128, activation='relu', input_shape=(8,)))
-model.add(Dense(128, activation='relu'))
-model.add(Dense(128, activation='relu'))
-model.add(Dense(128, activation='relu'))
-model.add(Dense(128, activation='relu'))
+model.add(Dense(16, activation='relu', input_shape=(8,)))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(32, activation='relu'))
+model.add(Dense(32, activation='relu'))
+model.add(BatchNormalization())
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.1))
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.1))
 model.add(Dense(64, activation='relu'))
 model.add(Dropout(0.1))
-model.add(Dense(64, activation='relu'))
+model.add(Dense(128, activation='relu'))
 model.add(Dropout(0.2))
-model.add(Dense(64, activation='relu'))
+model.add(Dense(128, activation='relu'))
 model.add(Dropout(0.2))
 model.add(Dense(4))
 
@@ -92,6 +93,6 @@ model.compile(optimizer=optimizer, loss=loser, metrics=['accuracy'])
 fitted = model.fit(df.values, labels, batch_size=32, epochs=256, validation_split=0.2, callbacks=ES)
 
 model.save("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
-# model.save("./BIOFM/weights/BIOFMGENETV1.keras") #Use this if there are pathing issues
+# model.save("./BIOFM/weights/BIOFMGENETV1.keras") #Use this if there are pathing issues 
 
 

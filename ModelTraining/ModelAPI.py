@@ -38,7 +38,7 @@ def predictBIO(data):
     result = BIOModel.predict(data)
     return result
 print(predictBIO(testdata))
-print(MRImodel.summary())
+print(BIOModel.summary())
 
 app = Flask(__name__)
 @app.route('/predictMRI', methods=['POST'])
