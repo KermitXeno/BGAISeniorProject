@@ -3,13 +3,11 @@
 @author: elamr
 """
 import os
-from keras.src.layers import Activation
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import models
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
-from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np

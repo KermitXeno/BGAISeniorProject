@@ -2,20 +2,17 @@
 """
 @author: elamr
 """
-#ML training
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import models
-from tensorflow.keras.layers import Dense, Conv2D, BatchNormalization, Dropout, Flatten
+from tensorflow.keras.layers import Dense, Dropout, Flatten
 from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.applications import ResNet50V2
 from tensorflow.keras import regularizers
-#math utilities
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-#data frame utils
 import pandas as pd
 #kaggle
 #import kaggle
@@ -60,7 +57,6 @@ EXTmodel = ResNet50V2(
     classes=4 
 )
 EXTmodel.trainable = True
-set_trainable = False
 
 model = tf.keras.Sequential()
 model.add(EXTmodel)
