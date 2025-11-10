@@ -11,6 +11,7 @@ from tensorflow.keras import models
 from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import EarlyStopping
 import numpy as np
 # kaggle
 #from kaggle.api.kaggle_api_extended import KaggleApi
@@ -55,25 +56,38 @@ labels = to_categorical(df['CDR'], num_classes=4)
 df.drop('CDR', axis=1, inplace=True)
 
 model = tf.keras.Sequential()
-model.add(Dense(512, activation='sigmoid', input_shape=(8,)))
-model.add(Dense(256, activation='sigmoid'))
-model.add(Dense(128, activation='sigmoid'))
-model.add(Dense(64, activation='sigmoid'))
-model.add(BatchNormalization())
-model.add(Dense(32, activation='softmax'))
-model.add(Dropout(0.05))
-model.add(Dense(32, activation='softmax'))
-model.add(Dropout(0.05))
-model.add(Dense(32, activation='softmax'))
-model.add(Dropout(0.05))
-model.add(Dense(32, activation='softmax'))
-model.add(Dropout(0.05))
+model.add(Dense(128, activation='relu', input_shape=(8,)))
+model.add(Dense(128, activation='relu'))
+model.add(Dense(128, activation='relu'))
+model.add(Dense(128, activation='relu'))
+model.add(Dense(128, activation='relu'))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.1))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.1))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.1))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.2))
+model.add(Dense(64, activation='relu'))
+model.add(Dropout(0.2))
 model.add(Dense(4))
 
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+ES = EarlyStopping(
+    monitor="val_loss",
+    min_delta=0.01,
+    patience=64,
+    verbose=1,
+    mode="auto",
+    restore_best_weights=True,
+    start_from_epoch=0,
+)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.00125)
 loser = keras.losses.BinaryCrossentropy(from_logits=True)
 model.compile(optimizer=optimizer, loss=loser, metrics=['accuracy'])
-model.fit(x=df, y=labels, epochs=64, batch_size=32)
+
+fitted = model.fit(df.values, labels, batch_size=32, epochs=256, validation_split=0.2, callbacks=ES)
 
 model.save("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
 

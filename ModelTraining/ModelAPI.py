@@ -30,6 +30,7 @@ def predictMRI(img):
     result = MRImodel.predict(img)   
     return result
 print(predictMRI(imgmild))
+print(MRImodel.summary())
 
 def predictBIO(data):
     data = np.array(data)
@@ -37,6 +38,7 @@ def predictBIO(data):
     result = BIOModel.predict(data)
     return result
 print(predictBIO(testdata))
+print(MRImodel.summary())
 
 app = Flask(__name__)
 @app.route('/predictMRI', methods=['POST'])

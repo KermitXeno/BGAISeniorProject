@@ -87,5 +87,7 @@ ES = EarlyStopping(
 optimizer = tf.keras.optimizers.SGD(learning_rate=0.00015)
 model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', metrics = ['accuracy'])
 fitted = model.fit(train, batch_size = 32, epochs = 42,validation_data = test, callbacks = ES)
+
+
 model.save('./ModelTraining/AMRI/weights/AMRIGENETV1.keras')
  
