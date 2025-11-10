@@ -38,28 +38,36 @@ def predictBIO(data):
     return result
 print(predictBIO(testdata))
 
-app = Flask(__name__)
-@app.route('/predictMRI', methods=['POST'])
-def predictMRI_api():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file part in the request'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    if file:
-        img = image.load_img(file, target_size=(128, 128))
-        result = predictMRI(img)
-        classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Severe Impairment']
-        predicted_class = classes[np.argmax(result)]
-        return jsonify({'prediction': predicted_class})
-    return jsonify({'error': 'File processing error'}), 500
+#TESTING SECTION PRE API
+# if __name__ == "__main__":
+#     print(BIOModel.summary())
+#     print(f"Results from BIOmarkers: {predictBIO(testdata)}")
+#     print(f"Results from MRI image: {predictMRI(imgmild)}")
+#     print(MRImodel.summary())
 
-@app.route('/predictBIO', methods=['POST'])
-def predictBIO_api():
-    data = request.json.get('data')
-    if not data or len(data) != 8:
-        return jsonify({'error': 'Invalid input data. Expected 8 features.'}), 400
-    result = predictBIO(data)
-    classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
-    predicted_class = classes[np.argmax(result)]
-    return jsonify({'prediction': predicted_class})
+
+# app = Flask(__name__)
+# @app.route('/predictMRI', methods=['POST'])
+# def predictMRI_api():
+#     if 'file' not in request.files:
+#         return jsonify({'error': 'No file part in the request'}), 400
+#     file = request.files['file']
+#     if file.filename == '':
+#         return jsonify({'error': 'No selected file'}), 400
+#     if file:
+#         img = image.load_img(file, target_size=(128, 128))
+#         result = predictMRI(img)
+#         classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Severe Impairment']
+#         predicted_class = classes[np.argmax(result)]
+#         return jsonify({'prediction': predicted_class})
+#     return jsonify({'error': 'File processing error'}), 500
+#
+# @app.route('/predictBIO', methods=['POST'])
+# def predictBIO_api():
+#     data = request.json.get('data')
+#     if not data or len(data) != 8:
+#         return jsonify({'error': 'Invalid input data. Expected 8 features.'}), 400
+#     result = predictBIO(data)
+#     classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
+#     predicted_class = classes[np.argmax(result)]
+#     return jsonify({'prediction': predicted_class})
