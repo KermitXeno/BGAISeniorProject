@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     ALLOWED_MRI_EXTENSIONS: List[str] = [".dcm", ".zip", ".nii", ".nii.gz"]
     MRI_PROCESSING_SERVICE_URL: str = "http://localhost:8001"
     LIFESTYLE_MODEL_SERVICE_URL: str = "http://localhost:8002"
+    ML_SERVICE_URL: str = "http://localhost:5000"
     REDIS_URL: str = "redis://localhost:6379"
     class Config:
         env_file = ".env"

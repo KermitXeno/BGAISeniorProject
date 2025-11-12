@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 import uvicorn
 from app.core.config import settings
-from app.core.database import engine, create_db_and_tables
-from app.routes import auth, health, mri, lifestyle
+from app.routes import health, simple_models
 security = HTTPBearer()
 def create_application() -> FastAPI:
     app = FastAPI(
@@ -23,14 +22,9 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(health.router, tags=["health"])
-    app.include_router(auth.router, prefix="/auth", tags=["authentication"])
-    app.include_router(mri.router, prefix="/mri", tags=["mri-processing"])
-    app.include_router(lifestyle.router, prefix="/lifestyle", tags=["lifestyle-assessment"])
+    app.include_router(simple_models.router, prefix="/models", tags=["alzheimer-models"])
     return app
 app = create_application()
-@app.on_event("startup")
-async def startup_event():
-    create_db_and_tables()
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
