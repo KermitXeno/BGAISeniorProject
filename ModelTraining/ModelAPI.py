@@ -41,7 +41,7 @@ def predictMRI_api():
     if not data:
         return jsonify({'error': 'No image path provided.'}), 400
     result = predictMRI(data)
-    classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
+    classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Very Mild Impairment']
     predicted_class = classes[np.argmax(result)]
     return jsonify({'prediction': predicted_class})
 def predictBIO(features):
