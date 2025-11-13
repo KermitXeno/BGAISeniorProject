@@ -51,7 +51,7 @@ def predictMRI_api():
     if not data:
         return jsonify({'error': 'No image path provided.'}), 400
     result = predictMRI(data)
-    classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
+    classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Very Mild Impairment']
     predicted_class = classes[np.argmax(result)]
     return jsonify({'prediction': predicted_class})
 
@@ -173,4 +173,4 @@ def health_check():
     return jsonify({'status': 'API is running', 'models_loaded': True})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, port=5001)
