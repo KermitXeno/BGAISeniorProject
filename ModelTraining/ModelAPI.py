@@ -50,6 +50,38 @@ def predictBIO(features):
     predictions = BIOModel.predict(features_array)
     return predictions[0]
 
+
+def matrix_MRI(MRImodel):
+    if MRImodel is None:
+        MRImodel = keras.saving.load_model("./AMRI/weights/AMRIGENETV1.keras")
+        optimizer = tf.keras.optimizers.SGD(learning_rate=0.00015)
+        MRImodel.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy', 'mse'])
+
+    test_data = keras.utils.image_dataset_from_directory(
+        directory='./AMRI/data/Combined Dataset/test',
+        labels='inferred',
+        label_mode='int',
+        batch_size=32,
+        image_size=(128, 128),
+        color_mode='rgb',
+        shuffle=False,
+        verbose=True
+    )
+    correct = np.concatenate([labels.numpy() for _, labels in test_data])
+    ypred = MRImodel.predict(test_data)
+    ypred_classes = np.argmax(ypred, axis=1)
+    classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Very Mild Impairment']
+
+    return tf.math.confusion_matrix(correct, ypred_classes).numpy()
+
+# def matrix_BIO(BIOmodel):
+#     if BIOmodel is None:
+#         BIOModel = keras.saving.load_model("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
+#         optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+#         BIOModel.compile(optimizer=optimizer, loss='categorical_crossentQQropy', metrics=['accuracy'])
+#         return 0
+
+
 @app.route('/predictBIO', methods=['POST'])
 def predictBIO_api():
     data = request.json.get('features')
