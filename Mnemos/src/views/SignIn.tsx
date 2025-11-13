@@ -1,69 +1,76 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+// src/views/SignIn.tsx
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { apiClient } from "../utils/api";
+
+type LoginResponse = { access_token: string; role?: string };
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (serverError) setServerError("");
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
+    const newErrors: Record<string, string> = {};
+    if (!formData.email) newErrors.email = "Email is required";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Please enter a valid email address";
+
+    if (!formData.password) newErrors.password = "Password is required";
+    else if (formData.password.length < 6)
+      newErrors.password = "Password must be at least 6 characters";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Use AuthContext login function
-      login({
+    setServerError("");
+
+    try {
+      // Flask returns { access_token, role }
+      const res = await apiClient.post<LoginResponse>("/auth/login", {
         email: formData.email,
-        name: formData.email.split('@')[0]
+        password: formData.password,
       });
-      
+
+      const token = res.data?.access_token;
+      if (!token) throw new Error("Missing token in response");
+
+      // persist JWT for interceptors/ProtectedRoute
+      localStorage.setItem("access_token", token);
+
+      // (optional) cache lightweight user context
+      localStorage.setItem(
+        "user",
+        JSON.stringify({ email: formData.email, role: res.data.role ?? "clinician" })
+      );
+
+      navigate("/chat", { replace: true });
+    } catch (err: any) {
+      // Axios error message or backend message
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Sign in failed. Please try again.";
+      setServerError(msg);
+    } finally {
       setIsLoading(false);
-      navigate('/chat'); // Redirect to chat after successful login
-    }, 1500);
+    }
   };
 
   return (
@@ -73,15 +80,17 @@ const SignIn: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-full shadow-primary mb-6">
             <span className="text-white font-bold text-2xl">M</span>
           </div>
-          <h2 className="text-3xl font-bold text-gradient-primary mb-2">
-            Welcome Back
-          </h2>
-          <p className="text-slate-600">
-            Sign in to your Mnemos account
-          </p>
+          <h2 className="text-3xl font-bold text-gradient-primary mb-2">Welcome Back</h2>
+          <p className="text-slate-600">Sign in to your Mnemos account</p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {serverError && (
+            <div className="p-3 rounded bg-red-50 text-red-700 text-sm border border-red-200">
+              {serverError}
+            </div>
+          )}
+
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
@@ -94,7 +103,7 @@ const SignIn: React.FC = () => {
                 autoComplete="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className={`input ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                className={`input ${errors.email ? "border-red-500 focus:border-red-500" : ""}`}
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -118,7 +127,7 @@ const SignIn: React.FC = () => {
                 autoComplete="current-password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className={`input ${errors.password ? 'border-red-500 focus:border-red-500' : ''}`}
+                className={`input ${errors.password ? "border-red-500 focus:border-red-500" : ""}`}
                 placeholder="Enter your password"
               />
               {errors.password && (
@@ -133,18 +142,10 @@ const SignIn: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
-                Remember me
-              </label>
-            </div>
-
+            <label className="flex items-center">
+              <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded" />
+              <span className="ml-2 block text-sm text-slate-700">Remember me</span>
+            </label>
             <div className="text-sm">
               <a href="#" className="text-primary-600 hover:text-primary-500 transition-colors duration-200">
                 Forgot your password?
@@ -179,7 +180,7 @@ const SignIn: React.FC = () => {
 
           <div className="text-center">
             <p className="text-slate-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{" "}
               <Link to="/create-account" className="text-primary-600 hover:text-primary-500 font-medium transition-colors duration-200">
                 Create one now
               </Link>
@@ -187,7 +188,6 @@ const SignIn: React.FC = () => {
           </div>
         </form>
 
-        {/* Features */}
         <div className="mt-12 grid grid-cols-1 gap-4">
           <div className="card text-center p-4">
             <div className="flex items-center justify-center space-x-4 text-sm text-slate-600">
@@ -201,7 +201,7 @@ const SignIn: React.FC = () => {
                 <svg className="w-4 h-4 text-primary-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                HIPAA Compliant
+                Research use only
               </div>
               <div className="flex items-center">
                 <svg className="w-4 h-4 text-primary-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
