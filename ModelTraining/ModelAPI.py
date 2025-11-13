@@ -44,6 +44,7 @@ def predictMRI_api():
     classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Very Mild Impairment']
     predicted_class = classes[np.argmax(result)]
     return jsonify({'prediction': predicted_class})
+
 def predictBIO(features):
     load_models()
     features_array = np.array(features).reshape(1, -1)
@@ -105,4 +106,4 @@ def health_check():
     return jsonify({'status': 'API is running', 'models_loaded': True})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, port=5001)
