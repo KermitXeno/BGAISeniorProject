@@ -2,16 +2,26 @@
 """
 @author: elamr
 """
-
+from dotenv import load_dotenv, find_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import tensorflow as tf
 import keras
 from keras.preprocessing import image
+import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+import pandas as pd
+import psycopg2
+import io, base64, os
 
 app = Flask(__name__)
 CORS(app)
+#
+# @app.before_first_request
+# def load_data():
+#     global long
+#     long = getTableData(conn, 'longitudinal_oasis')
 
 MRImodel = None
 BIOModel = None
@@ -44,13 +54,40 @@ def predictMRI_api():
     classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
     predicted_class = classes[np.argmax(result)]
     return jsonify({'prediction': predicted_class})
+
 def predictBIO(features):
     load_models()
     features_array = np.array(features).reshape(1, -1)
     predictions = BIOModel.predict(features_array)
     return predictions[0]
 
+#DATABASE STUFF
+load_dotenv(find_dotenv(usecwd=True))
 
+HOST = os.getenv("HOST")
+PORT = os.getenv("PORT",5432)
+DBNAME = os.getenv("DBNAME")
+USER = os.getenv("USER")
+PASSWORD = os.getenv("PASSWORD")
+
+conn = psycopg2.connect(f"host={HOST} port={PORT} dbname={DBNAME} user={USER} password={PASSWORD} gssencmode=disable")
+
+long_df = None
+
+
+def getTableData(conn, table_name):
+    try:
+        cur = conn.cursor()
+        cur.execute(f"""select * from longitudinal_oasis""")
+        df = pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+        return df
+    except Exception as e:
+        print(e)
+
+    finally:
+        cur.close()
+
+# DATA ANALYTICS STUFF
 def matrix_MRI(MRImodel):
     if MRImodel is None:
         MRImodel = keras.saving.load_model("./AMRI/weights/AMRIGENETV1.keras")
@@ -74,12 +111,43 @@ def matrix_MRI(MRImodel):
 
     return tf.math.confusion_matrix(correct, ypred_classes).numpy()
 
+
 # def matrix_BIO(BIOmodel):
 #     if BIOmodel is None:
 #         BIOModel = keras.saving.load_model("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
 #         optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 #         BIOModel.compile(optimizer=optimizer, loss='categorical_crossentQQropy', metrics=['accuracy'])
 #         return 0
+
+#Reusable for all plot tp image making
+def plot_to_img(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', bbox_inches='tight')
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close(fig)
+    return image_base64
+
+#THE ACTUAL PLOTS
+# def age_distribution_plot(df):
+#     sns.set_theme(style="darkgrid", palette="crest")
+#     fig, ax = plt.subplots(figsize=(10,7))
+#     sns.histplot(x=df['age'], hue=df['dementia'], multiple="dodge", discrete=True, ax=ax)
+#     ax.set_title("Figure A: Ages of Demented and Non-Demented Patients")
+#     ax.set_ylabel("Frequency of Observed Age")
+#     ax.set_xlabel("Age of Patient (in Years)")
+#     ax.set_yticks(np.arange(0,15))
+#     return plot_to_img(fig)
+
+#PLOT ROUTES
+# @app.route('/age-distribution')
+# def age_distribution():
+#     global long
+#     if long is None:
+#         return jsonify({'error': 'No data provided.'}), 500
+#
+#     image_base64 = age_distribution_plot(long)
+#     plt.close()
+#     return jsonify({'image': image_base64})
 
 
 @app.route('/predictBIO', methods=['POST'])
