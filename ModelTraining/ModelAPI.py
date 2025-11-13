@@ -4,6 +4,7 @@
 """
 
 from flask import Flask, jsonify, request, send_from_directory
+from flask_cors import CORS
 import tensorflow as tf
 import keras
 from keras.preprocessing import image
@@ -39,6 +40,7 @@ def predictBIO(data):
 print(predictBIO(testdata))
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 @app.route('/predictMRI', methods=['POST'])
 def predictMRI_api():
     if 'file' not in request.files:
@@ -49,9 +51,17 @@ def predictMRI_api():
     if file:
         img = image.load_img(file, target_size=(128, 128))
         result = predictMRI(img)
-        classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Severe Impairment']
+        classes = ['Mild Impairment', 'Moderate Impairment', 'No Impairment', 'Very Mild Impairment']
         predicted_class = classes[np.argmax(result)]
-        return jsonify({'prediction': predicted_class})
+        confidence_scores = result[0].tolist()
+        confidence = float(confidence_scores[np.argmax(result)])
+        
+        return jsonify({
+            'prediction': predicted_class,
+            'confidence': confidence,
+            'all_scores': {classes[i]: float(confidence_scores[i]) for i in range(len(classes))},
+            'status': 'success'
+        })
     return jsonify({'error': 'File processing error'}), 500
 
 @app.route('/predictBIO', methods=['POST'])
@@ -62,4 +72,19 @@ def predictBIO_api():
     result = predictBIO(data)
     classes = ['No Impairment', 'Very Mild Impairment', 'Mild Impairment', 'Moderate Impairment']
     predicted_class = classes[np.argmax(result)]
-    return jsonify({'prediction': predicted_class})
+    confidence_scores = result[0].tolist()
+    confidence = float(confidence_scores[np.argmax(result)])
+    
+    return jsonify({
+        'prediction': predicted_class,
+        'confidence': confidence,
+        'all_scores': {classes[i]: float(confidence_scores[i]) for i in range(len(classes))},
+        'status': 'success'
+    })
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({'status': 'API is running', 'models_loaded': True})
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

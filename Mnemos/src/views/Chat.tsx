@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { useDropzone } from 'react-dropzone';
+import { medicalAPI, MRIAnalysisResult, BiomarkerAnalysisResult, BiomarkerData, formatConfidence, getConfidenceColor, getSeverityLevel } from '../utils/api';
 
 interface Message {
   id: string;
@@ -7,6 +8,8 @@ interface Message {
   text: string;
   timestamp: Date;
   files?: File[];
+  analysisResult?: MRIAnalysisResult | BiomarkerAnalysisResult;
+  analysisType?: 'mri' | 'biomarker';
 }
 
 const Chat: React.FC = () => {
@@ -21,6 +24,18 @@ const Chat: React.FC = () => {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showBiomarkerForm, setShowBiomarkerForm] = useState(false);
+  const [biomarkerData, setBiomarkerData] = useState<BiomarkerData>({
+    gender: 0,
+    age: 65,
+    education: 12,
+    ses: 2,
+    mmse: 28,
+    cdr: 0,
+    etiv: 1500,
+    nwbv: 0.8
+  });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setUploadedFiles(prev => [...prev, ...acceptedFiles]);
@@ -37,7 +52,7 @@ const Chat: React.FC = () => {
     noClick: true
   });
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (input.trim() === "" && uploadedFiles.length === 0) return;
 
     const newMessage: Message = {
@@ -50,22 +65,147 @@ const Chat: React.FC = () => {
 
     setMessages(prev => [...prev, newMessage]);
     setInput("");
+    const filesToAnalyze = [...uploadedFiles];
     setUploadedFiles([]);
     setIsTyping(true);
+    setIsAnalyzing(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      // Check if we have medical image files to analyze
+      const imageFiles = filesToAnalyze.filter(file => 
+        file.type.startsWith('image/') || file.name.toLowerCase().includes('.dcm')
+      );
+
+      if (imageFiles.length > 0) {
+        // Analyze the first image file
+        const analysisResult = await medicalAPI.analyzeMRI(imageFiles[0]);
+        
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          sender: "ai",
+          text: `I've analyzed your MRI scan. Here are the findings:
+
+**Diagnosis**: ${analysisResult.prediction}
+**Confidence**: ${formatConfidence(analysisResult.confidence)}
+
+**Detailed Analysis**:
+${Object.entries(analysisResult.all_scores)
+  .map(([condition, score]) => `• ${condition}: ${formatConfidence(score)}`)
+  .join('\n')}
+
+Based on these results, ${getSeverityLevel(analysisResult.prediction) === 'low' 
+  ? 'the scan shows minimal concerns. Continue with regular monitoring and follow your doctor\'s recommendations.'
+  : getSeverityLevel(analysisResult.prediction) === 'medium'
+  ? 'there are some findings that warrant attention. Please discuss these results with your healthcare provider for next steps.'
+  : 'the scan shows significant findings. It\'s important to consult with your neurologist promptly for comprehensive evaluation and treatment planning.'
+}
+
+Would you like me to explain any specific aspects of these findings or answer any questions about your results?`,
+          timestamp: new Date(),
+          analysisResult,
+          analysisType: 'mri'
+        };
+
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        // General AI response for text-only messages
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          sender: "ai",
+          text: input.toLowerCase().includes('biomarker') || input.toLowerCase().includes('blood') 
+            ? "I can help analyze biomarker data! Please use the 'Biomarker Analysis' button below to enter your lab values, and I'll provide insights about cognitive health indicators."
+            : "I understand your question. Let me help you with that. For detailed medical analysis, you can:\n\n• Upload MRI scans for brain imaging analysis\n• Use the biomarker analysis for lab results\n• Ask specific questions about your medical reports\n\nWhat would you like to explore?",
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      }
+    } catch (error) {
+      console.error('Analysis error:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: "I'm sorry, there was an error analyzing your file. Please make sure the image is a valid medical scan (JPEG, PNG, or DICOM format) and try again. If the problem persists, please check that the AI analysis service is running.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleBiomarkerAnalysis = async () => {
+    setIsAnalyzing(true);
+    setIsTyping(true);
+    setShowBiomarkerForm(false);
+
+    // Add user message with biomarker data
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: `Biomarker Analysis Request:
+• Gender: ${biomarkerData.gender === 0 ? 'Male' : 'Female'}
+• Age: ${biomarkerData.age} years
+• Education: ${biomarkerData.education} years
+• Socioeconomic Status: ${biomarkerData.ses}
+• MMSE Score: ${biomarkerData.mmse}/30
+• CDR: ${biomarkerData.cdr}
+• ETIV: ${biomarkerData.etiv}
+• NWBV: ${biomarkerData.nwbv}`,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const analysisResult = await medicalAPI.analyzeBiomarkers(biomarkerData);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         sender: "ai",
-        text: uploadedFiles.length > 0 
-          ? "I've received your files. Based on the uploaded scans, I can help analyze and explain the findings in simple terms. What specific questions do you have about your results?"
-          : "I understand your question. Let me help you with that. For more detailed analysis, feel free to upload any medical scans or reports you'd like me to review.",
+        text: `I've analyzed your biomarker data. Here are the findings:
+
+**Cognitive Assessment**: ${analysisResult.prediction}
+**Confidence**: ${formatConfidence(analysisResult.confidence)}
+
+**Detailed Probability Scores**:
+${Object.entries(analysisResult.all_scores)
+  .map(([condition, score]) => `• ${condition}: ${formatConfidence(score)}`)
+  .join('\n')}
+
+**Key Insights**:
+• **MMSE Score (${biomarkerData.mmse}/30)**: ${biomarkerData.mmse >= 28 ? 'Excellent cognitive function' : biomarkerData.mmse >= 24 ? 'Mild cognitive concerns' : 'Significant cognitive concerns - please consult your physician'}
+• **CDR Rating (${biomarkerData.cdr})**: ${biomarkerData.cdr === 0 ? 'No dementia symptoms' : biomarkerData.cdr === 0.5 ? 'Very mild symptoms' : 'Clinical attention needed'}
+• **Brain Volume (NWBV: ${biomarkerData.nwbv})**: ${biomarkerData.nwbv >= 0.8 ? 'Normal brain volume' : 'Reduced brain volume detected'}
+
+**Recommendations**:
+${getSeverityLevel(analysisResult.prediction) === 'low' 
+  ? '• Continue regular health monitoring\n• Maintain healthy lifestyle habits\n• Regular cognitive assessments'
+  : getSeverityLevel(analysisResult.prediction) === 'medium'
+  ? '• Schedule follow-up with neurologist\n• Consider cognitive training exercises\n• Monitor symptoms closely'
+  : '• Urgent consultation with neurologist recommended\n• Comprehensive neuropsychological evaluation\n• Discuss treatment options with healthcare team'
+}
+
+Would you like me to explain any of these biomarkers or discuss what these results mean for cognitive health?`,
+        timestamp: new Date(),
+        analysisResult,
+        analysisType: 'biomarker'
+      };
+
+      setMessages(prev => [...prev, aiResponse]);
+    } catch (error) {
+      console.error('Biomarker analysis error:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: "I'm sorry, there was an error analyzing your biomarker data. Please check that all values are entered correctly and that the AI analysis service is running. You can try again or contact support if the issue persists.",
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+      setIsAnalyzing(false);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -200,6 +340,151 @@ const Chat: React.FC = () => {
             )}
           </div>
 
+          {/* Biomarker Analysis Form */}
+          {showBiomarkerForm && (
+            <div className="bg-gradient-to-r from-secondary-50 to-accent-50 border border-secondary-200 rounded-lg p-6 mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-slate-700 flex items-center space-x-2">
+                  <svg className="w-5 h-5 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                  </svg>
+                  <span>Biomarker Analysis</span>
+                </h3>
+                <button
+                  onClick={() => setShowBiomarkerForm(false)}
+                  className="text-slate-400 hover:text-slate-600 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Gender</label>
+                  <select
+                    value={biomarkerData.gender}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, gender: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value={0}>Male</option>
+                    <option value={1}>Female</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Age (years)</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.age}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, age: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="18" max="120"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Education (years)</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.education}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, education: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="0" max="30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">SES</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.ses}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, ses: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="1" max="5" step="0.1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">MMSE Score</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.mmse}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, mmse: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="0" max="30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">CDR</label>
+                  <select
+                    value={biomarkerData.cdr}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, cdr: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value={0}>0 (Normal)</option>
+                    <option value={0.5}>0.5 (Very Mild)</option>
+                    <option value={1}>1 (Mild)</option>
+                    <option value={2}>2 (Moderate)</option>
+                    <option value={3}>3 (Severe)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">eTIV</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.etiv}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, etiv: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="1000" max="2500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">nWBV</label>
+                  <input
+                    type="number"
+                    value={biomarkerData.nwbv}
+                    onChange={(e) => setBiomarkerData(prev => ({ ...prev, nwbv: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-secondary-200 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    min="0.5" max="1.0" step="0.001"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowBiomarkerForm(false)}
+                  className="btn-outline btn-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleBiomarkerAnalysis}
+                  disabled={isAnalyzing}
+                  className="btn-primary btn-sm flex items-center space-x-2"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Analyzing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      <span>Analyze</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Input Area */}
           <div className="flex space-x-3">
             <div className="flex-1 relative">
@@ -217,7 +502,7 @@ const Chat: React.FC = () => {
                 }}
               />
               <button
-                onClick={() => document.querySelector('input[type="file"]')?.click()}
+                onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary-400 hover:text-primary-500 transition-colors duration-200"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -234,6 +519,16 @@ const Chat: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
               </svg>
               <span className="hidden sm:inline">Send</span>
+            </button>
+            <button
+              onClick={() => setShowBiomarkerForm(!showBiomarkerForm)}
+              className="btn-secondary px-4 py-2 flex items-center space-x-2 shadow-secondary hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              title="Biomarker Analysis"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+              </svg>
+              <span className="hidden md:inline">Biomarkers</span>
             </button>
           </div>
         </div>

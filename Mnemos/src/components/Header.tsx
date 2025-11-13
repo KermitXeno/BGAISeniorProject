@@ -1,14 +1,23 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
  
   const handleGetStarted = () => {
     navigate('/create-account');
   };
+
   const handleSignIn = () => {
     navigate('/signin');
+  };
+
+  const handleSignOut = () => {
+    logout();
+    navigate('/');
   };
   return (
     <header className="bg-background shadow-primary border-b border-secondary-200/30">
@@ -44,14 +53,32 @@ const Header: React.FC = () => {
             </a>
           </div>
           
-          {/* CTA Button */}
+          {/* CTA Button - Show different content based on auth status */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="btn-outline btn-sm" onClick={handleSignIn}>
-              Sign In
-            </button>
-            <button className="btn-primary btn-sm" onClick={handleGetStarted}>
-              Get Started
-            </button>
+            {user ? (
+              // Signed in state
+              <div className="flex items-center space-x-4">
+                <span className="text-text-primary text-sm">
+                  Welcome, {user.name}
+                </span>
+                <button 
+                  className="btn-outline btn-sm" 
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              // Not signed in state
+              <>
+                <button className="btn-outline btn-sm" onClick={handleSignIn}>
+                  Sign In
+                </button>
+                <button className="btn-primary btn-sm" onClick={handleGetStarted}>
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
           
           {/* Mobile menu button */}
@@ -102,23 +129,41 @@ const Header: React.FC = () => {
             >
               Chat
             </a>
-             {/* Mobile CTA Buttons */}
+             {/* Mobile CTA Buttons - Show different content based on auth status */}
             <div className="pt-4 space-y-2 border-t border-secondary-200/30">
-              <button 
-                onClick={handleSignIn}
-                className="w-full btn-outline btn-md"
-              >
-                Sign In
-              </button>
-              <button 
-                onClick={handleGetStarted}
-                className="w-full btn-primary btn-md shadow-primary flex items-center justify-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-                <span>Get Started</span>
-              </button>
+              {user ? (
+                // Signed in state
+                <div className="space-y-2">
+                  <div className="text-center text-text-primary text-sm py-2">
+                    Welcome, {user.name}
+                  </div>
+                  <button 
+                    onClick={handleSignOut}
+                    className="w-full btn-outline btn-md"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                // Not signed in state
+                <>
+                  <button 
+                    onClick={handleSignIn}
+                    className="w-full btn-outline btn-md"
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    onClick={handleGetStarted}
+                    className="w-full btn-primary btn-md shadow-primary flex items-center justify-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    <span>Get Started</span>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

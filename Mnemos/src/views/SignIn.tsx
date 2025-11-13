@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const SignIn: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -53,11 +55,11 @@ const SignIn: React.FC = () => {
     
     // Simulate API call
     setTimeout(() => {
-      // Store user session (in real app, you'd get this from your backend)
-      localStorage.setItem('user', JSON.stringify({
+      // Use AuthContext login function
+      login({
         email: formData.email,
         name: formData.email.split('@')[0]
-      }));
+      });
       
       setIsLoading(false);
       navigate('/chat'); // Redirect to chat after successful login
