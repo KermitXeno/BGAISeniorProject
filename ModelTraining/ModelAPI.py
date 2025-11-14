@@ -73,7 +73,7 @@ def load_mri_model():
             MRIModel = tf.keras.models.load_model(model_path)
             
             # Optional: recompile if needed
-            optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+            optimizer = tf.keras.optimizers.SGD(learning_rate=0.00015)
             MRIModel.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
             print("MRI model loaded successfully")
             print(f"Model input shape: {MRIModel.input_shape}")
@@ -252,12 +252,14 @@ def generate_recommendations(sorted_predictions, confidence_margin):
         else:
             recommendations.extend([
                 "Monitor cognitive function closely",
-                "Consider repeat imaging in 6-12 months",
-                "Lifestyle interventions as prevention"
-            ])
-    
-    elif "Very Mild Impairment" in primary["label"]:
-        recommendations.extend([
+        # Read image
+        image_bytes = image_file.read()
+        image = Image.open(io.BytesIO(image_bytes))
+        image_file.seek(0)  # Reset stream position for future reads
+        
+        # Convert to RGB if necessary
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
             "Neuropsychological assessment recommended",
             "Monitor progression with regular follow-ups",
             "Consider cognitive training programs",

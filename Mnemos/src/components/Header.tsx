@@ -47,6 +47,12 @@ const Header: React.FC = () => {
             >
               About
             </a>
+              <a
+              href="/data"
+              className="text-text-primary hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+            >
+              Our Data
+            </a>
       
             <a  href="/chat" className="text-text-primary hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
               Chat

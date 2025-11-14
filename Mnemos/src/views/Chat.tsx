@@ -165,8 +165,13 @@ Would you like me to explain any specific aspects of these findings or answer an
         sender: "ai",
         text: `I've analyzed your biomarker data. Here are the findings:
 
+<<<<<<< HEAD
 **Dementia Assessment**: ${analysisResult.prediction}
 **Confidence**: ${formatConfidence(analysisResult.confidence)}
+=======
+**Cognitive Assessment**: ${analysisResult.prediction}
+ {/* **Confidence**: ${formatConfidence(analysisResult.confidence)} */}
+>>>>>>> dae8268372e2cb4a0454ff1c60bf6d61bed606a4
 
 **CDR (Clinical Dementia Rating) Probability Scores**:
 ${Object.entries(analysisResult.all_scores)

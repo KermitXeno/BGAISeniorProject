@@ -8,6 +8,8 @@ import VueDemo from './views/VueDemo'
 import Chat from './views/Chat'
 import SignIn from './views/SignIn'
 import CreateAccount from './views/CreateAccount'
+import OurData from './views/OurData'
+
 import './App.css'
 
 function App() {
@@ -22,6 +24,7 @@ function App() {
             <Route path="chat" element={<Chat />} />
             <Route path="signin" element={<SignIn />} />
             <Route path="create-account" element={<CreateAccount />} />
+              <Route path="/data" element={<OurData />} />
 
           </Route>
         </Routes>
