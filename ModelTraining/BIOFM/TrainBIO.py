@@ -89,13 +89,3 @@ loser = keras.losses.BinaryCrossentropy(from_logits=True)
 model.compile(optimizer=optimizer, loss=loser, metrics=['accuracy'])
 
 fitted = model.fit(df.values, labels, batch_size=32, epochs=256, validation_split=0.2, callbacks=ES)
-
-<<<<<<< HEAD
-#model.save("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
-model.save("./weights/BIOFMGENETV1.keras") #Use this if there are pathing issues
-=======
-model.save("./ModelTraining/BIOFM/weights/BIOFMGENETV1.keras")
-# model.save("./BIOFM/weights/BIOFMGENETV1.keras") #Use this if there are pathing issues 
->>>>>>> de2c5cf34ddc3d22898b28682fabed42e2c44095
-
-

@@ -2,7 +2,6 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout'
-import AgePlot from './components/agePlot'
 import Home from './views/Home'
 import About from './views/About'
 import VueDemo from './views/VueDemo'
@@ -26,8 +25,6 @@ function App() {
             <Route path="signin" element={<SignIn />} />
             <Route path="create-account" element={<CreateAccount />} />
               <Route path="/data" element={<OurData />} />
-              <Route path="/age-distribution" element={<AgePlot />} />
-
 
           </Route>
         </Routes>
