@@ -6,7 +6,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import models
 from tensorflow.keras.layers import Dense, Dropout, Flatten
-from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.applications import ResNet50V2
 from tensorflow.keras import regularizers
