@@ -8,3 +8,7 @@
 /ModelTraining/BIOFM/weights/BIOFMGENETV1.keras
 /ModelTraining/AMRI/weights/AMRIGENETV1.keras
 /ModelTraining/EEG/*
+/venv/
+/backend-api/venv/
+/backend-api/__pycache__/
+

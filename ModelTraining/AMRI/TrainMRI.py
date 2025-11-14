@@ -23,7 +23,7 @@ import pandas as pd
 print("Done downloading dataset")
 
 train_data = keras.utils.image_dataset_from_directory(
-    directory='./ModelTraining/AMRI/data/Combined Dataset/train',
+    directory='./data/Combined Dataset/train',
     labels='inferred',
     label_mode='int',
     batch_size=32,
@@ -34,7 +34,7 @@ train_data = keras.utils.image_dataset_from_directory(
 )
 
 test_data = keras.utils.image_dataset_from_directory(
-    directory='./ModelTraining/AMRI/data/Combined Dataset/test',
+    directory='./data/Combined Dataset/test',
     labels='inferred',
     label_mode='int',
     batch_size=32,
@@ -85,5 +85,5 @@ model.compile(optimizer = optimizer, loss = 'sparse_categorical_crossentropy', m
 fitted = model.fit(train, batch_size = 32, epochs = 42,validation_data = test, callbacks = ES)
 
 
-model.save('./ModelTraining/AMRI/weights/AMRIGENETV1.keras')
+model.save('./weights/AMRIGENETV1.keras')
  
